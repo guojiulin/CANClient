@@ -30,6 +30,7 @@ CAN_RxHeaderTypeDef   RxHeader;
 uint32_t               id=0x18013F01;
 uint8_t               TxData[8] = {0};
 uint8_t               RxData[8] = {0};
+uint32_t              Data[64] = {0};
 uint32_t              TxMailbox;
 /* USER CODE END 0 */
 
@@ -206,60 +207,56 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
   RxHeader.RTR = CAN_RTR_DATA;
   RxHeader.IDE = CAN_ID_EXT;
   RxHeader.DLC = 8;
-	
-  HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &RxHeader, RxData);
-	
-	
-	switch(RxHeader.ExtId){
-		case 0x1401013F:
-			dataprocess();
-		break;
-		case 0x1401023F:
-			dataprocess();
-		break;
-		case 0x1401033F:
-			dataprocess();
-		break;
-		case 0x1401043F:
-			dataprocess();
-		break;
-		case 0x1401053F:
-			dataprocess();
-		break;
-		case 0x1401063F:
-			dataprocess();
-		break;
-		case 0x1401073F:
-			dataprocess();
-		break;
-		case 0x1401083F:
-			dataprocess();
-		break;
-		default:
-			printf("id: %x",RxHeader.ExtId);
-    break;
-	
+	HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &RxHeader, RxData);
+	if(RxHeader.ExtId==0x1401013F)
+	{
+		dataprocess();
 	}
-
  
 }
 
 void dataprocess()
 {
-	unsigned char loop;
-	uint16_t mask=1;
+	unsigned char loop,count;
 	for(loop=0;loop<8;loop++)
 	{
-		if(mask & RxData[loop])
-		{
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_SET);
-		}
-		mask <<= 1;
+		Data[0+8*loop]=RxData[loop]>>0&1;
+		Data[1+8*loop]=RxData[loop]>>1&1;
+		Data[2+8*loop]=RxData[loop]>>2&1;
+		Data[3+8*loop]=RxData[loop]>>3&1;
+		Data[4+8*loop]=RxData[loop]>>4&1;
+		Data[5+8*loop]=RxData[loop]>>5&1;
+		Data[6+8*loop]=RxData[loop]>>6&1;
+		Data[7+8*loop]=RxData[loop]>>7&1;
 	}
+			if(Data[0]==1)
+		{
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+		}
+		 if(Data[0]==0)
+		{
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+		}
+		 if(Data[63]==1)
+		{
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_RESET);
+		}
+		 if(Data[63]==0)
+		{
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET);
+		}
+//	for(count=0;count<64;count++)
+//	{
+
+//		if(mask & Data[count])
+//		{
+//			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
+//		}
+//		else
+//		{
+//			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_SET);
+//		}
+//	}
 }
 
 /* USER CODE END 1 */
