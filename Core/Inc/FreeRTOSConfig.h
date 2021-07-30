@@ -43,6 +43,8 @@
  *----------------------------------------------------------*/
 
 /* USER CODE BEGIN Includes */
+
+
 /* Section where include file can be added */
 /* USER CODE END Includes */
 
@@ -50,7 +52,6 @@
 #if defined(__ICCARM__) || defined(__CC_ARM) || defined(__GNUC__)
   #include <stdint.h>
   extern uint32_t SystemCoreClock;
-  void xPortSysTickHandler(void);
 #endif
 #define configUSE_PREEMPTION                     1
 #define configSUPPORT_STATIC_ALLOCATION          1
@@ -131,6 +132,21 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 header file. */
 /* USER CODE BEGIN 1 */
 #define configASSERT( x ) if ((x) == 0) {taskDISABLE_INTERRUPTS(); for( ;; );}
+
+#define configGENERATE_RUN_TIME_STATS 1 
+//启用可视化跟踪调试 
+#define configUSE_TRACE_FACILITY 1 
+/* 与宏 configUSE_TRACE_FACILITY 同时为 1 时会编译下面 3 个函数
+* prvWriteNameToBuffer()
+* vTaskList(),
+* vTaskGetRunTimeStats()
+*/
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
+
+extern volatile uint32_t CPU_RunTime; 
+
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() (CPU_RunTime = 0ul) 
+#define portGET_RUN_TIME_COUNTER_VALUE() CPU_RunTime
 /* USER CODE END 1 */
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
@@ -141,7 +157,7 @@ standard names. */
 /* IMPORTANT: This define is commented when used with STM32Cube firmware, when the timebase source is SysTick,
               to prevent overwriting SysTick_Handler defined within STM32Cube HAL */
 
-/* #define xPortSysTickHandler SysTick_Handler */
+#define xPortSysTickHandler SysTick_Handler
 
 /* USER CODE BEGIN Defines */
 /* Section where parameter definitions can be added (for instance, to override default ones in FreeRTOS.h) */

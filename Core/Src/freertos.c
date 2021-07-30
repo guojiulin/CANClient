@@ -23,7 +23,6 @@
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
-#include "can.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -49,12 +48,19 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
+/* Definitions for canTask */
+osThreadId_t canTaskHandle;
+const osThreadAttr_t canTask_attributes = {
+  .name = "canTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for CPUTask */
+osThreadId_t CPUTaskHandle;
+const osThreadAttr_t CPUTask_attributes = {
+  .name = "CPUTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,7 +68,8 @@ const osThreadAttr_t defaultTask_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void can_Task(void *argument);
+void CPU_Task(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -93,8 +100,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of canTask */
+  canTaskHandle = osThreadNew(can_Task, NULL, &canTask_attributes);
+
+  /* creation of CPUTask */
+  CPUTaskHandle = osThreadNew(CPU_Task, NULL, &CPUTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -106,29 +116,68 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_can_Task */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the canTask thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_can_Task */
+void can_Task(void *argument)
 {
-  /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN can_Task */
   /* Infinite loop */
   for(;;)
   {
+		CAN_Send_Message();
     osDelay(1);
-CAN_Send_Message();
-
-
+		
+  }
+  /* USER CODE END can_Task */
 }
-  /* USER CODE END StartDefaultTask */
+
+/* USER CODE BEGIN Header_CPU_Task */
+/**
+* @brief Function implementing the CPUTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_CPU_Task */
+void CPU_Task(void *argument)
+{
+  /* USER CODE BEGIN CPU_Task */
+  /* Infinite loop */
+  for(;;)
+  {
+   uint8_t CPU_RunInfo[400];		//保存任务运行时间信息
+    while (1)
+    {
+        memset(CPU_RunInfo,0,400);				//信息缓冲区清零
+    
+        vTaskList((char *)&CPU_RunInfo);  //获取任务运行时间信息
+    
+        printf("---------------------------------------------\r\n");
+        printf("任务名      任务状态 优先级   剩余栈 任务序号\r\n");
+        printf("%s", CPU_RunInfo);
+        printf("---------------------------------------------\r\n");
+    
+        memset(CPU_RunInfo,0,400);				//信息缓冲区清零
+    
+        vTaskGetRunTimeStats((char *)&CPU_RunInfo);
+    
+        printf("任务名       运行计数         利用率\r\n");
+        printf("%s", CPU_RunInfo);
+        printf("---------------------------------------------\r\n\n");
+        vTaskDelay(1000);   /* 延时500个tick */		
+    }
+  }
+	
 }
+  /* USER CODE END CPU_Task */
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
 
 /* USER CODE END Application */
 

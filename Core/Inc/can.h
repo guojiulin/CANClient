@@ -32,8 +32,6 @@ extern "C" {
 /* USER CODE END Includes */
 
 extern CAN_HandleTypeDef hcan;
-	
-extern CAN_RxHeaderTypeDef   RxHeader;
 
 /* USER CODE BEGIN Private defines */
 

@@ -34,6 +34,7 @@ uint32_t              Data[64] = {0};
 uint32_t              TxMailbox;
 /* USER CODE END 0 */
 
+CAN_HandleTypeDef hcan;
 
 /* CAN init function */
 void MX_CAN_Init(void)
@@ -179,23 +180,19 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 /* USER CODE BEGIN 1 */
 void CAN_Send_Message()
 {   
+	unsigned char i;
 
   TxHeader.ExtId = 0x18013F01;
   TxHeader.RTR = CAN_RTR_DATA;
   TxHeader.IDE = CAN_ID_EXT;
   TxHeader.DLC = 8;
   TxHeader.TransmitGlobalTime = DISABLE;
-
-
-		TxData[0]=RxData[0];
-	  TxData[1]=RxData[1];
-		TxData[2]=RxData[2];
-		TxData[3]=RxData[3];
-		TxData[4]=RxData[4];
-		TxData[5]=RxData[5];
-		TxData[6]=RxData[6];
-		TxData[7]=RxData[7];
-		HAL_CAN_AddTxMessage(&hcan,&TxHeader,TxData,&TxMailbox);
+	
+	for(i=0;i<8;i++)
+	{
+		TxData[i]=RxData[i];
+	}
+	HAL_CAN_AddTxMessage(&hcan,&TxHeader,TxData,&TxMailbox);
 
 	
 }
@@ -220,14 +217,10 @@ void dataprocess()
 	unsigned char loop,count;
 	for(loop=0;loop<8;loop++)
 	{
-		Data[0+8*loop]=RxData[loop]>>0&1;
-		Data[1+8*loop]=RxData[loop]>>1&1;
-		Data[2+8*loop]=RxData[loop]>>2&1;
-		Data[3+8*loop]=RxData[loop]>>3&1;
-		Data[4+8*loop]=RxData[loop]>>4&1;
-		Data[5+8*loop]=RxData[loop]>>5&1;
-		Data[6+8*loop]=RxData[loop]>>6&1;
-		Data[7+8*loop]=RxData[loop]>>7&1;
+		for(count=0;count<8;count++)
+		{
+			Data[count+8*loop]=RxData[loop]>>count&1;
+		}
 	}
 			if(Data[0]==1)
 		{
